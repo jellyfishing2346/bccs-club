@@ -1,14 +1,13 @@
-"use client"; // This makes it a Client Component
+"use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // For navigation
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link'; // Import Link component
 import EventSection from "@/app/ui/portal/events/EventSection";
 
 export const runtime = 'edge';
 
 export default function Page() {
-
   const searchParams = useSearchParams();
   const [event, setEvent] = useState(null);
 
@@ -23,7 +22,7 @@ export default function Page() {
     }
   }, [searchParams]);
   
-  const router = useRouter(); // Initialize useRouter for navigation
+  const router = useRouter();
   
   return (
     <main>
@@ -31,13 +30,12 @@ export default function Page() {
         <EventSection event={event} />
       )}
       <div className="mt-10 flex justify-center items-center gap-x-6">
-        <a
+        <Link
           href="/events"
-          rel="noopener noreferrer"
           className="rounded-md px-3.5 py-2.5 text-sm font-semibold bg-transparent text-bc-red border border-bc-red hover:bg-bc-yellow hover:border-transparent"
         >
           Go Back to Events Calendar
-        </a>
+        </Link>
       </div>
     </main>
   );

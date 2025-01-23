@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link'; // Import the Link component
 import teamPic from '../../../images/team/executive-board-2024-2025/executive-board-2024-2025-02.jpg';
 
 export default function TeamSection() {
@@ -24,9 +25,11 @@ export default function TeamSection() {
                 Beyond the Executive Board, we are always looking to expand our team with talented members who want to get involved. There are open roles such as Web Developer, Event Coordinator, Graphic Designer, and more. If you are passionate about contributing to the BC tech community, we would love to have you join us!
               </p>
               <div className="mt-10 flex">
-                <a href="/team" className="text-sm font-semibold leading-6 text-bc-red hover:text-bc-yellow">
-                  Meet the team <span aria-hidden="true">&rarr;</span>
-                </a>
+                <Link href="/team">
+                  <a className="text-sm font-semibold leading-6 text-bc-red hover:text-bc-yellow">
+                    Meet the team <span aria-hidden="true">&rarr;</span>
+                  </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -43,7 +46,6 @@ export default function TeamSection() {
             className="aspect-[1318/752] w-[82.375rem] flex-none bg-gradient-to-r from-[#ff80b5] to-[#9089fc] opacity-20"
           />
         </div>
-
       </div>
     </div>
   );

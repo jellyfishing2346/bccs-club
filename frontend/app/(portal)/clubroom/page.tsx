@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // Added this import
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -46,9 +47,11 @@ const ClubRoomList = () => {
             {steps.map((step, index) => (
               <SwiperSlide key={index}>
                 <div className="text-center p-5">
-                  <img
+                  <Image
                     src={step.image}
                     alt={step.imageDescription || `Step ${index + 1}`}
+                    width={500} // Adjust based on your needs
+                    height={300} // Adjust based on your needs
                     className="w-full object-cover rounded-lg"
                   />
                   <p className="my-3 text-lg font-bold text-gray-800 max-w-[90%] mx-auto">

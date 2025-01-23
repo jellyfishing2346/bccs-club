@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link' // Add this import
 import resourcePic from '../../../images/club-event/company-visit.jpg'
 import { CheckCircleIcon } from '@heroicons/react/20/solid'
 
@@ -42,9 +43,9 @@ export default function TeamSection() {
                 ))}
               </ul>
               <div className="mt-10 flex">
-                <a href="/resources" className="text-sm font-semibold leading-6 text-bc-red hover:text-bc-yellow">
+                <Link href="/resources" className="text-sm font-semibold leading-6 text-bc-red hover:text-bc-yellow">
                   Check out the resources <span aria-hidden="true">&rarr;</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
