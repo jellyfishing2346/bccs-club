@@ -2,10 +2,11 @@ export const dynamic = 'error';
 export const dynamicParams = false;
 export function generateStaticParams() { return []; }
 export const revalidate = false;
+export const runtime = 'edge';
 
-export default function LegacyPortalCatchAll() {
-  if (process.env.NODE_ENV !== 'production') {
-    console.warn("[portal/[...not_found]] is deprecated. Using (portal)/not-found.tsx.");
-  }
-  return null;
+import { notFound } from 'next/navigation';
+
+export default function PortalCatchAll() {
+  // Delegate all unmatched portal routes to the segment-level not-found page
+  notFound();
 }
