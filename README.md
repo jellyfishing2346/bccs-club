@@ -1,6 +1,5 @@
 # Brooklyn College Computer Science Club Website
 
-<!-- Updated deployment test -->
 ## Tech Stack
 
 - Frontend:
