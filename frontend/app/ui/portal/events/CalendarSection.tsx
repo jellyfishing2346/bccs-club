@@ -12,6 +12,13 @@ const Calendar = ({
   handleEventClick: (event: Event) => void;
   events: Event[];
 }) => {
+  // Debug logging
+  console.log("CalendarSection received events:", events.length);
+  const sept2025Events = events.filter(event => 
+    event.startTime && event.startTime.startsWith('2025-09')
+  );
+  console.log("September 2025 events for calendar:", sept2025Events.length, sept2025Events.slice(0, 3));
+
   return (
     <div className="mx-auto max-w-4xl px-6 lg:px-8 py-8">
       <div className="overflow-hidden shadow-lg rounded-lg">
@@ -24,9 +31,10 @@ const Calendar = ({
               rrulePlugin,
             ]}
             initialView="dayGridMonth"
+            initialDate="2025-09-01"
             events={events
-              .filter(event => event.isActive)
               .map((event) => {
+                console.log(`CalendarSection mapping event ${event.id}: ${event.title} on ${event.startTime}, isActive: ${event.isActive}`);
                 const { endTime: end, startTime: start, id, ...rest } = event;
                 return {
                 ...rest,
