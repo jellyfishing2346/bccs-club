@@ -10,7 +10,7 @@ import getEventAction from "@/app/lib/actions/getEventAction";
 export const runtime = "edge";
 
 export default function Page() {
-  const { event: eventName } = useParams();
+  const { event: eventName } = useParams() as { event: string };
 
   const [event, setEvent] = useState<Event | null>(null);
 
