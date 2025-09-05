@@ -15,11 +15,24 @@ class Chat:
 
     def __init__(self):
         load_dotenv()
+        # Allow overriding the model/provider via environment variables.
+        # Set the following to enable a different model for all clients:
+        # - LLM_BASE_URL: e.g. "https://api.openai.com/v1" or "https://openrouter.ai/api/v1"
+        # - LLM_MODEL: e.g. "gpt-5-preview" (if available) or any supported model id
+        # - LLM_API_KEY: API key matching the chosen provider
+        base_url = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+        model = os.getenv("LLM_MODEL", os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.2-3b-instruct:free"))
+        api_key = (
+            os.getenv("LLM_API_KEY")
+            or (os.getenv("OPENROUTER_API_KEY") if "openrouter.ai" in base_url else os.getenv("OPENAI_API_KEY"))
+        )
+
         self.llm = ChatOpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url=base_url,
+            api_key=api_key,
             temperature=0,
-            model="meta-llama/llama-3.2-3b-instruct:free")
+            model=model,
+        )
         self.vectorstore = InMemoryVectorStore(
             embedding=HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-large"))
 
