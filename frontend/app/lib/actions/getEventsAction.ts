@@ -4,18 +4,28 @@ import { Event } from "../../utils/types";
 
 export default async function getEventAction(): Promise<Event[] | null> {
   const BACKEND_URL = process.env.BACKEND_URL || "https://api.bccs.club";
-
+  
   try {
-    const response = await fetch(`${BACKEND_URL}/v1/calendar/events`);
+    console.log("Fetching events from:", `${BACKEND_URL}/v1/calendar/events`);
+    
+    const response = await fetch(`${BACKEND_URL}/v1/calendar/events`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
+      console.error("API Response not OK:", response.status, response.statusText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const events: Event[] = await response.json();
+    console.log("Successfully fetched", events.length, "events from API");
     return events;
   } catch (error) {
-    console.error("Error fetching events:", error);
+    console.error("Error fetching events from API:", error);
+    console.log("Using mock data fallback");
     // Return mock data as fallback for development/demo purposes
     return [
       {

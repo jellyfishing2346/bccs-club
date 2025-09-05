@@ -1,11 +1,11 @@
 export interface Event {
-  id: string;
+  id: string | number;
   title: string;
   description: string;
   location: string;
   slug: string;
   isActive: boolean;
-  rsvpLink: string;
+  rsvpLink: string | null;
   rrule?: {
     freq: string;
     interval: number;
