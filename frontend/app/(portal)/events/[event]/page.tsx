@@ -43,7 +43,7 @@ export default function Page() {
     fetchEvent();
   }, [eventName]);
 
-  if (state === "loading") return;
+  if (state === "loading") return <div>Loading...</div>;
 
   return (
     <main>
