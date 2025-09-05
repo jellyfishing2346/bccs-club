@@ -27,9 +27,10 @@ const Calendar = ({
             events={events
               .filter(event => event.isActive)
               .map((event) => {
-                const { endTime: end, startTime: start, ...rest } = event;
+                const { endTime: end, startTime: start, id, ...rest } = event;
                 return {
                 ...rest,
+                id: String(id), // Convert id to string for FullCalendar compatibility
                 title: event.title,
                 start,
                 end,
@@ -39,7 +40,7 @@ const Calendar = ({
                   isActive: event.isActive,
                   rsvpLink: event.rsvpLink,
                   location: event.location,
-                  id: event.id,
+                  originalId: event.id,
                   slug: event.slug
                 },
               };
