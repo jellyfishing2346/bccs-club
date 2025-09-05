@@ -24,10 +24,11 @@ const Calendar = ({
               rrulePlugin,
             ]}
             initialView="dayGridMonth"
-            events={events.map((event) => {
-              const { endTime: end, startTime: start, ...rest } = event;
-              if (!event.isActive) return {};
-              return {
+            events={events
+              .filter(event => event.isActive)
+              .map((event) => {
+                const { endTime: end, startTime: start, ...rest } = event;
+                return {
                 ...rest,
                 title: event.title,
                 start,
