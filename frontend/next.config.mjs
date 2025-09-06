@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: true,
+  // trailingSlash removed to avoid 308 redirects on API routes
   images: {
     unoptimized: true
   }
