@@ -1,8 +1,4 @@
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-import { notFound } from 'next/navigation';
-
-export default function PortalCatchAll() {
-  notFound();
-}
+// This file is intentionally left empty to be removed. The portal catch-all has been deprecated.
