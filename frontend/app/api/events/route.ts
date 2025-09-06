@@ -16,6 +16,7 @@ function readEnv() {
     BASIC_USER: env.EVENTS_API_BASIC_USER as string | undefined,
     BASIC_PASS: env.EVENTS_API_BASIC_PASS as string | undefined,
     EXTRA_HEADERS_JSON: env.EVENTS_API_EXTRA_HEADERS as string | undefined,
+    USE_FALLBACK_ONLY: String(env.EVENTS_USE_FALLBACK_ONLY || "false").toLowerCase() === "true",
   };
 }
 
@@ -154,6 +155,19 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 2): Pro
 export async function GET() {
   // Read env at request time to avoid module-init failures
   const vars = readEnv();
+
+  // Feature flag: force fallback without touching upstream
+  if (vars.USE_FALLBACK_ONLY) {
+    return new NextResponse(JSON.stringify(FALLBACK_EVENTS), {
+      status: 200,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "x-fallback": "true",
+        "x-reason": "forced-fallback",
+      },
+    });
+  }
 
   try {
     const headers = buildUpstreamHeaders(vars);

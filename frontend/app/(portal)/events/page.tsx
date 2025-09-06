@@ -32,6 +32,13 @@ const FALLBACK_EVENTS: Event[] = [
   },
 ];
 
+function withTimeout(input: RequestInfo, init: RequestInit & { timeout?: number } = {}) {
+  const { timeout = 5000, ...rest } = init;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(input, { ...rest, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 export default function Page() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,19 +46,29 @@ export default function Page() {
   const router = useRouter(); // Initialize useRouter for navigation
 
   useEffect(() => {
-    // Fetch events from the same-origin proxy to avoid CORS differences
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/events', { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const apiEvents: Event[] = await response.json();
-        const activeEvents = apiEvents.filter((event: Event) => event.isActive);
+        // 1) Try same-origin API (Edge Function)
+        const res = await withTimeout('/api/events', { cache: 'no-store', timeout: 5000 });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const apiEvents: Event[] = await res.json();
+        const activeEvents = apiEvents.filter((e) => e.isActive);
         setEvents(activeEvents);
-      } catch (error) {
-        console.error('Failed to fetch events:', error);
-        // Always use a safe fallback in production to keep UX working
-        setEvents(FALLBACK_EVENTS);
+      } catch (err) {
+        console.error('Failed to fetch /api/events:', err);
+        try {
+          // 2) Fallback to direct public API (CORS should allow GET)
+          const res2 = await withTimeout('https://api.bccs.club/v1/calendar/events', { cache: 'no-store', timeout: 5000 });
+          if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+          const apiEvents: Event[] = await res2.json();
+          const activeEvents = apiEvents.filter((e) => e.isActive);
+          setEvents(activeEvents);
+        } catch (err2) {
+          console.error('Failed to fetch public API:', err2);
+          // 3) Final local fallback
+          setEvents(FALLBACK_EVENTS);
+        }
       } finally {
         setLoading(false);
       }
