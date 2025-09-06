@@ -16,14 +16,15 @@ export default function EventPageClient() {
       if (typeof eventName !== "string") return;
       
       try {
-        const response = await fetch('https://api.bccs.club/v1/calendar/events');
+        // Use same-origin proxy to avoid CORS and upstream differences
+        const response = await fetch('/api/events');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const events = await response.json();
-        const foundEvent = events.find((event: Event) => event.slug === eventName);
+        const events: Event[] = await response.json();
+        const foundEvent = events.find((e: Event) => e.slug === eventName);
         
         if (!foundEvent) {
           setState("error");
