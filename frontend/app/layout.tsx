@@ -3,9 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import NavBar from "./ui/portal/navbar";
 import Footer from "./ui/portal/footer";
-import AIActionButton from "./ui/portal/ai/AIActionButton";
-
-export const runtime = "edge";
 
 const inter = Inter({ subsets: ["latin"] });
 
