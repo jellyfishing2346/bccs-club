@@ -15,60 +15,46 @@ export default function Page() {
   const router = useRouter(); // Initialize useRouter for navigation
 
   useEffect(() => {
-    // Fetch events from the backend API (matching original behavior)
+    // Fetch events from the same-origin proxy to avoid CORS differences
     const fetchEvents = async () => {
-      console.log("Starting to fetch events...");
       setLoading(true);
-      
       try {
-        const response = await fetch('https://api.bccs.club/v1/calendar/events');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        const response = await fetch('/api/events');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const apiEvents = await response.json();
-        console.log(`Successfully fetched ${apiEvents.length} events from API`);
-        
-        // Filter active events (matching original behavior)
         const activeEvents = apiEvents.filter((event: Event) => event.isActive);
-        console.log(`Found ${activeEvents.length} active events`);
-        
-        // Debug: Check September 2025 events specifically
-        const sept2025Events = activeEvents.filter((event: Event) => 
-          event.startTime && event.startTime.startsWith('2025-09')
-        );
-        console.log(`Found ${sept2025Events.length} September 2025 events:`, sept2025Events.slice(0, 3));
-        
         setEvents(activeEvents);
       } catch (error) {
-        console.error('Failed to fetch events from API:', error);
-        console.log('Falling back to mock data');
-        // Fallback to basic mock data if API fails
-        setEvents([
-          {
-            id: "1",
-            slug: "coffee-and-code-night",
-            title: "Coffee and Code Night",
-            description: "Join us for an evening of coding, collaboration, and coffee!",
-            location: "Brooklyn College Library - Room 213",
-            startTime: "2025-09-10T18:00:00",
-            endTime: "2025-09-10T20:00:00",
-            isActive: true,
-            rsvpLink: "https://forms.gle/example1"
-          },
-          {
-            id: "2", 
-            slug: "game-jam-2025",
-            title: "Game Jam 2025",
-            description: "Our annual game development competition!",
-            location: "Brooklyn College - Ingersoll Hall",
-            startTime: "2025-09-20T09:00:00",
-            endTime: "2025-09-22T17:00:00",
-            isActive: true,
-            rsvpLink: "https://forms.gle/example2"
-          }
-        ]);
+        console.error('Failed to fetch events:', error);
+        if (process.env.NODE_ENV === 'development') {
+          // Dev-only fallback so local UX remains good
+          setEvents([
+            {
+              id: "1",
+              slug: "coffee-and-code-night",
+              title: "Coffee and Code Night",
+              description: "Join us for an evening of coding, collaboration, and coffee!",
+              location: "Brooklyn College Library - Room 213",
+              startTime: "2025-09-10T18:00:00",
+              endTime: "2025-09-10T20:00:00",
+              isActive: true,
+              rsvpLink: "https://forms.gle/example1"
+            },
+            {
+              id: "2", 
+              slug: "game-jam-2025",
+              title: "Game Jam 2025",
+              description: "Our annual game development competition!",
+              location: "Brooklyn College - Ingersoll Hall",
+              startTime: "2025-09-20T09:00:00",
+              endTime: "2025-09-22T17:00:00",
+              isActive: true,
+              rsvpLink: "https://forms.gle/example2"
+            }
+          ]);
+        } else {
+          setEvents([]);
+        }
       } finally {
         setLoading(false);
       }
