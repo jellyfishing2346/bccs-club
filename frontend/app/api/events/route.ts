@@ -11,13 +11,7 @@ type Event = {
   slug: string;
   isActive: boolean;
   rsvpLink: string | null;
-  rrule?: {
-    freq?: string;
-    interval?: number;
-    byweekday?: string | string[];
-    dtstart?: string;
-    until?: string;
-  };
+  rrule?: any; // pass-through string or object supported by FullCalendar
   startTime: string;
   endTime: string;
   duration?: string;
@@ -25,14 +19,25 @@ type Event = {
 };
 
 function toEvent(e: any): Event | null {
-  const rrule = e.rrule || e.RRULE || undefined;
-  const start = e.startTime || e.start_time || e.start || rrule?.dtstart || "";
+  const rawRrule = e.rrule ?? e.RRULE;
+  const rrule = typeof rawRrule === 'string'
+    ? rawRrule
+    : rawRrule
+    ? {
+        freq: rawRrule.freq ?? rawRrule.FREQ,
+        interval: rawRrule.interval ?? rawRrule.INTERVAL,
+        byweekday: rawRrule.byweekday ?? rawRrule.BYDAY,
+        dtstart: rawRrule.dtstart ?? rawRrule.DTSTART,
+        until: rawRrule.until ?? rawRrule.UNTIL,
+      }
+    : undefined;
+
+  const start = e.startTime || e.start_time || e.start || (typeof rrule === 'object' ? rrule?.dtstart : undefined) || "";
   const end = e.endTime || e.end_time || e.end || "";
   const slug = e.slug || e.Slug || (e.title ? e.title.toLowerCase().replace(/\s+/g, "-") : undefined);
   const id = e.id ?? e._id ?? slug ?? `${e.title ?? "event"}-${start}`;
   const isActive = typeof e.isActive === "boolean" ? e.isActive : (e.status ? String(e.status).toLowerCase() !== "disabled" : true);
 
-  // If neither start nor rrule present, skip
   if (!start && !rrule) return null;
 
   return {
@@ -43,13 +48,7 @@ function toEvent(e: any): Event | null {
     slug: slug ?? String(id),
     isActive,
     rsvpLink: e.rsvpLink ?? e.rsvp_link ?? null,
-    rrule: rrule ? {
-      freq: rrule.freq ?? rrule.FREQ,
-      interval: rrule.interval ?? rrule.INTERVAL,
-      byweekday: rrule.byweekday ?? rrule.BYDAY,
-      dtstart: rrule.dtstart ?? rrule.DTSTART ?? start,
-      until: rrule.until ?? rrule.UNTIL,
-    } : undefined,
+    rrule,
     startTime: start,
     endTime: end || start,
     duration: e.duration,
@@ -57,14 +56,18 @@ function toEvent(e: any): Event | null {
   };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const origin = new URL(req.url).origin;
     const res = await fetch("https://api.bccs.club/v1/calendar/events", {
       headers: {
         Accept: "application/json",
         "User-Agent": "bccs-club-pages-function/1.0 (+https://bccs.club)",
+        Origin: origin,
+        Referer: `${origin}/events`,
       },
       cache: "no-store",
+      redirect: "follow",
     });
 
     if (!res.ok) {
