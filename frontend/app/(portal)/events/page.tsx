@@ -6,7 +6,31 @@ import HeroSection from "@/app/ui/portal/events/HeroSection";
 import CalendarSection from "@/app/ui/portal/events/CalendarSection";
 import { Event } from "@/app/utils/types";
 
-// Removed edge runtime to fix server action compatibility issue
+// Lightweight fallback used when API fails (works in prod and dev)
+const FALLBACK_EVENTS: Event[] = [
+  {
+    id: "1",
+    slug: "coffee-and-code-night",
+    title: "Coffee and Code Night",
+    description: "Join us for an evening of coding, collaboration, and coffee!",
+    location: "Brooklyn College Library - Room 213",
+    startTime: "2025-09-10T18:00:00",
+    endTime: "2025-09-10T20:00:00",
+    isActive: true,
+    rsvpLink: "https://forms.gle/example1",
+  },
+  {
+    id: "2",
+    slug: "game-jam-2025",
+    title: "Game Jam 2025",
+    description: "Our annual game development competition!",
+    location: "Brooklyn College - Ingersoll Hall",
+    startTime: "2025-09-20T09:00:00",
+    endTime: "2025-09-22T17:00:00",
+    isActive: true,
+    rsvpLink: "https://forms.gle/example2",
+  },
+];
 
 export default function Page() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -19,42 +43,15 @@ export default function Page() {
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/events');
+        const response = await fetch('/api/events', { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const apiEvents = await response.json();
+        const apiEvents: Event[] = await response.json();
         const activeEvents = apiEvents.filter((event: Event) => event.isActive);
         setEvents(activeEvents);
       } catch (error) {
         console.error('Failed to fetch events:', error);
-        if (process.env.NODE_ENV === 'development') {
-          // Dev-only fallback so local UX remains good
-          setEvents([
-            {
-              id: "1",
-              slug: "coffee-and-code-night",
-              title: "Coffee and Code Night",
-              description: "Join us for an evening of coding, collaboration, and coffee!",
-              location: "Brooklyn College Library - Room 213",
-              startTime: "2025-09-10T18:00:00",
-              endTime: "2025-09-10T20:00:00",
-              isActive: true,
-              rsvpLink: "https://forms.gle/example1"
-            },
-            {
-              id: "2", 
-              slug: "game-jam-2025",
-              title: "Game Jam 2025",
-              description: "Our annual game development competition!",
-              location: "Brooklyn College - Ingersoll Hall",
-              startTime: "2025-09-20T09:00:00",
-              endTime: "2025-09-22T17:00:00",
-              isActive: true,
-              rsvpLink: "https://forms.gle/example2"
-            }
-          ]);
-        } else {
-          setEvents([]);
-        }
+        // Always use a safe fallback in production to keep UX working
+        setEvents(FALLBACK_EVENTS);
       } finally {
         setLoading(false);
       }
