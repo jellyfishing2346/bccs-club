@@ -3,31 +3,50 @@ import { NextResponse } from "next/server";
 // Run this API route on the Edge runtime for Cloudflare Pages Functions
 export const runtime = "edge";
 
-// Optional upstream configuration via environment variables for a permanent fix
-// Set these in Cloudflare Pages Project > Settings > Environment Variables
-const UPSTREAM_URL = process.env.EVENTS_API_URL ?? "https://api.bccs.club/v1/calendar/events";
-const AUTH_BEARER = process.env.EVENTS_API_BEARER; // e.g. "eyJhbGciOi..."
-const API_KEY = process.env.EVENTS_API_KEY; // e.g. for x-api-key
-const BASIC_USER = process.env.EVENTS_API_BASIC_USER;
-const BASIC_PASS = process.env.EVENTS_API_BASIC_PASS;
-const EXTRA_HEADERS_JSON = process.env.EVENTS_API_EXTRA_HEADERS; // JSON string of additional headers
+// Default upstream if no env is provided
+const DEFAULT_UPSTREAM_URL = "https://api.bccs.club/v1/calendar/events";
 
-function buildUpstreamHeaders(): Record<string, string> {
+// Safely read environment variables in Edge without throwing if process is undefined
+function readEnv() {
+  const env = (globalThis as any)?.process?.env ?? {};
+  return {
+    UPSTREAM_URL: env.EVENTS_API_URL || DEFAULT_UPSTREAM_URL,
+    AUTH_BEARER: env.EVENTS_API_BEARER as string | undefined,
+    API_KEY: env.EVENTS_API_KEY as string | undefined,
+    BASIC_USER: env.EVENTS_API_BASIC_USER as string | undefined,
+    BASIC_PASS: env.EVENTS_API_BASIC_PASS as string | undefined,
+    EXTRA_HEADERS_JSON: env.EVENTS_API_EXTRA_HEADERS as string | undefined,
+  };
+}
+
+function base64(str: string) {
+  try {
+    // btoa is available in many edge environments
+    // @ts-ignore
+    if (typeof btoa === "function") return btoa(str);
+  } catch {}
+  try {
+    // Node compat (if available via nodejs_compat)
+    // @ts-ignore
+    if (globalThis.Buffer) return Buffer.from(str, "utf-8").toString("base64");
+  } catch {}
+  return "";
+}
+
+function buildUpstreamHeaders(vars: ReturnType<typeof readEnv>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
     "User-Agent": "bccs-club-pages-function/1.0 (+https://bccs.club)",
   };
 
-  if (AUTH_BEARER) headers["Authorization"] = `Bearer ${AUTH_BEARER}`;
-  if (API_KEY) headers["x-api-key"] = API_KEY;
-  if (BASIC_USER && BASIC_PASS && !headers["Authorization"]) {
-    // Edge runtime provides btoa
-    const token = btoa(`${BASIC_USER}:${BASIC_PASS}`);
-    headers["Authorization"] = `Basic ${token}`;
+  if (vars.AUTH_BEARER) headers["Authorization"] = `Bearer ${vars.AUTH_BEARER}`;
+  if (vars.API_KEY) headers["x-api-key"] = vars.API_KEY;
+  if (vars.BASIC_USER && vars.BASIC_PASS && !headers["Authorization"]) {
+    headers["Authorization"] = `Basic ${base64(`${vars.BASIC_USER}:${vars.BASIC_PASS}`)}`;
   }
-  if (EXTRA_HEADERS_JSON) {
+  if (vars.EXTRA_HEADERS_JSON) {
     try {
-      const extra = JSON.parse(EXTRA_HEADERS_JSON);
+      const extra = JSON.parse(vars.EXTRA_HEADERS_JSON);
       for (const [k, v] of Object.entries(extra)) {
         if (typeof v === "string" && v) headers[k] = v;
       }
@@ -133,9 +152,12 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 2): Pro
 }
 
 export async function GET() {
+  // Read env at request time to avoid module-init failures
+  const vars = readEnv();
+
   try {
-    const headers = buildUpstreamHeaders();
-    const res = await fetchWithRetry(UPSTREAM_URL, {
+    const headers = buildUpstreamHeaders(vars);
+    const res = await fetchWithRetry(vars.UPSTREAM_URL, {
       headers,
       cache: "no-store",
       redirect: "follow",
@@ -149,7 +171,7 @@ export async function GET() {
         headers: {
           "content-type": "application/json; charset=utf-8",
           "cache-control": "no-store",
-          "x-upstream-url": UPSTREAM_URL,
+          "x-upstream-url": vars.UPSTREAM_URL,
           "x-upstream-status": String(res.status),
           "x-upstream-body": text?.slice(0, 200) || "",
           "x-fallback": "true",
@@ -176,7 +198,7 @@ export async function GET() {
       headers: {
         "content-type": "application/json; charset=utf-8",
         "cache-control": "no-store",
-        "x-upstream-url": UPSTREAM_URL,
+        "x-upstream-url": vars.UPSTREAM_URL,
         "x-error": String(err?.message ?? err),
         "x-fallback": "true",
       },
